@@ -1,0 +1,23 @@
+services:
+  grigallery:
+    build: .
+    container_name: grigallery
+    restart: unless-stopped
+    # Run as the host user that owns ./data (grig = 1000), so the files stay yours.
+    # Create the folder before the first start: mkdir -p data
+    user: "1000:1000"
+    env_file: .env
+    environment:
+      # Client IP for the login rate limit: Caddy appends it to X-Forwarded-For.
+      ADDRESS_HEADER: x-forwarded-for
+      XFF_DEPTH: "1"
+    volumes:
+      - ./data:/data
+    # Join the network Caddy is on and point Caddy at grigallery:3000.
+    # networks: [caddy]
+    # For a quick local test instead:
+    # ports: ["127.0.0.1:3000:3000"]
+
+# networks:
+#   caddy:
+#     external: true

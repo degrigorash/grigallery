@@ -1,0 +1,174 @@
+:root {
+	color-scheme: dark;
+	--bg: #0e0e11;
+	--panel: #17171c;
+	--panel-2: #1f1f26;
+	--line: #2a2a33;
+	--text: #ececf1;
+	--muted: #9a9aa6;
+	--accent: #8fb3ff;
+	--danger: #ff7a7a;
+	--ok: #8fdc9a;
+	--warn: #e6c27a;
+	--radius: 10px;
+	font-family:
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	background: var(--bg);
+	color: var(--text);
+	scrollbar-gutter: stable;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	-webkit-tap-highlight-color: transparent;
+}
+
+body.no-scroll {
+	overflow: hidden;
+}
+
+/* The reserved scrollbar gutter takes the viewer's colour while it's open. */
+html:has(body.no-scroll) {
+	background: #050507;
+}
+
+button,
+input,
+select {
+	font: inherit;
+	color: inherit;
+}
+
+button {
+	cursor: pointer;
+}
+
+button:disabled {
+	cursor: default;
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* ---------- shared controls ---------- */
+
+.icon-btn {
+	position: relative;
+	display: inline-grid;
+	place-items: center;
+	width: 38px;
+	height: 38px;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: 9px;
+	background: transparent;
+	color: var(--muted);
+	text-decoration: none;
+}
+
+.icon-btn:hover {
+	background: var(--panel-2);
+	color: var(--text);
+}
+
+.icon-btn.active {
+	border-color: var(--line);
+	background: var(--panel-2);
+	color: var(--text);
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	height: 38px;
+	padding: 0 14px;
+	border: 1px solid var(--line);
+	border-radius: 9px;
+	background: var(--panel-2);
+	white-space: nowrap;
+}
+
+.btn:hover {
+	border-color: #3c3c48;
+}
+
+.btn.primary {
+	border-color: transparent;
+	background: var(--accent);
+	color: #0b1020;
+	font-weight: 600;
+}
+
+.btn.primary:hover {
+	filter: brightness(1.08);
+}
+
+.btn:disabled {
+	opacity: 0.5;
+}
+
+.field {
+	height: 40px;
+	padding: 0 12px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--panel-2);
+	outline: none;
+}
+
+.field:focus {
+	border-color: var(--accent);
+}
+
+/* ---------- dialogs ---------- */
+
+dialog.dialog {
+	width: min(440px, calc(100vw - 24px));
+	max-height: calc(100dvh - 24px);
+	padding: 20px;
+	border: 1px solid var(--line);
+	border-radius: 14px;
+	background: var(--panel);
+	color: var(--text);
+}
+
+dialog.dialog::backdrop {
+	background: rgba(0, 0, 0, 0.6);
+}
+
+.dialog h2 {
+	margin: 0;
+	font-size: 1.1rem;
+}
+
+.dialog-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 16px;
+}
