@@ -2,6 +2,7 @@
 	import { formatDate, formatSize, ratio } from '#lib/format.ts';
 	import type { Gallery } from '#lib/gallery.svelte.ts';
 	import type { GalleryImage } from '#lib/types.ts';
+	import Icon from './Icon.svelte';
 
 	let { g, onopen }: { g: Gallery; onopen: (id: string) => void } = $props();
 
@@ -9,8 +10,14 @@
 		// Let ctrl/cmd/middle click open the link in a new tab as usual.
 		if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 		e.preventDefault();
-		onopen(id);
+		if (g.selecting) g.toggleSelected(id);
+		else onopen(id);
 	}
+
+	const countLabel = (id: string) => {
+		const n = g.counts.get(id) ?? 0;
+		return `${n} ${n === 1 ? 'image' : 'images'}`;
+	};
 
 	// Justified rows: fill each row edge to edge with every picture at the same
 	// height, never taller than the target. Needs the container width, so until
@@ -45,6 +52,7 @@
 {#snippet rowTile(item: GalleryImage, style: string)}
 	<a
 		class="rtile"
+		class:picked={g.selected.has(item.id)}
 		href="?img={item.id}"
 		{style}
 		style:background-color={item.color}
@@ -59,13 +67,36 @@
 			height={item.height}
 		/>
 		<span class="caption">{item.name}</span>
+		{@render mark(item.id)}
 	</a>
+{/snippet}
+
+{#snippet mark(id: string)}
+	{#if g.selecting}
+		<span class="mark" class:on={g.selected.has(id)} aria-hidden="true">
+			<Icon name="check" size={16} />
+		</span>
+	{/if}
 {/snippet}
 
 {#if g.view === 'grid'}
 	<div class="grid">
+		{#each g.visibleFolders as folder (folder.id)}
+			<a class="tile" href={g.url(folder.id)}>
+				<div class="frame folder-frame">
+					<Icon name="folder" size={48} />
+					<span class="fcount">{countLabel(folder.id)}</span>
+				</div>
+				<span class="caption">{folder.name}</span>
+			</a>
+		{/each}
 		{#each g.visible as item (item.id)}
-			<a class="tile" href="?img={item.id}" onclick={(e) => open(e, item.id)}>
+			<a
+				class="tile"
+				class:picked={g.selected.has(item.id)}
+				href="?img={item.id}"
+				onclick={(e) => open(e, item.id)}
+			>
 				<div class="frame" style:background-color={item.color}>
 					<img
 						src={item.thumb}
@@ -75,12 +106,24 @@
 						width={item.width}
 						height={item.height}
 					/>
+					{@render mark(item.id)}
 				</div>
 				<span class="caption">{item.name}</span>
 			</a>
 		{/each}
 	</div>
 {:else if g.view === 'rows'}
+	{#if g.visibleFolders.length}
+		<div class="fstrip">
+			{#each g.visibleFolders as folder (folder.id)}
+				<a class="fcard" href={g.url(folder.id)}>
+					<Icon name="folder" size={22} />
+					<span class="fname">{folder.name}</span>
+					<span class="fmeta">{g.counts.get(folder.id) ?? 0}</span>
+				</a>
+			{/each}
+		</div>
+	{/if}
 	<div class="rows" bind:clientWidth={rowsWidth}>
 		{#if rows.length}
 			{#each rows as row, i (i)}
@@ -100,10 +143,25 @@
 	</div>
 {:else}
 	<div class="list">
+		{#each g.visibleFolders as folder (folder.id)}
+			<a class="lrow" href={g.url(folder.id)}>
+				<div class="lthumb fthumb"><Icon name="folder" size={28} /></div>
+				<div class="lname">{folder.name}</div>
+				<span class="lcell date">{countLabel(folder.id)}</span>
+				<span class="lcell dims"></span>
+				<span class="lcell size"></span>
+			</a>
+		{/each}
 		{#each g.visible as item (item.id)}
-			<a class="lrow" href="?img={item.id}" onclick={(e) => open(e, item.id)}>
+			<a
+				class="lrow"
+				class:picked={g.selected.has(item.id)}
+				href="?img={item.id}"
+				onclick={(e) => open(e, item.id)}
+			>
 				<div class="lthumb" style:background-color={item.color}>
 					<img src={item.thumb} alt="" loading="lazy" decoding="async" />
+					{@render mark(item.id)}
 				</div>
 				<div class="lname">
 					{item.name}
@@ -130,6 +188,104 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+	}
+
+	/* ---------- folders and selection ---------- */
+
+	.folder-frame {
+		position: relative;
+		display: grid;
+		place-items: center;
+		align-content: center;
+		gap: 6px;
+		background: var(--panel);
+		color: var(--accent);
+		transition: background 0.2s;
+	}
+
+	.tile:hover .folder-frame {
+		background: var(--panel-2);
+	}
+
+	.fcount {
+		font-size: 0.8rem;
+		color: var(--muted);
+	}
+
+	.fstrip {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-bottom: 12px;
+	}
+
+	.fcard {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		max-width: 100%;
+		height: 48px;
+		padding: 0 14px;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		background: var(--panel);
+		color: var(--accent);
+	}
+
+	.fcard:hover {
+		background: var(--panel-2);
+	}
+
+	.fname {
+		overflow: hidden;
+		color: var(--text);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.fmeta {
+		font-size: 0.8rem;
+		color: var(--muted);
+	}
+
+	.fthumb {
+		display: grid;
+		place-items: center;
+		background: var(--panel);
+		color: var(--accent);
+	}
+
+	.frame,
+	.lthumb {
+		position: relative;
+	}
+
+	.mark {
+		position: absolute;
+		top: 6px;
+		left: 6px;
+		display: grid;
+		place-items: center;
+		width: 24px;
+		height: 24px;
+		border: 2px solid #fff;
+		border-radius: 50%;
+		background: rgba(0, 0, 0, 0.35);
+		color: transparent;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+	}
+
+	.mark.on {
+		border-color: var(--accent);
+		background: var(--accent);
+		color: #0b1020;
+	}
+
+	.picked .frame,
+	.rtile.picked,
+	.picked .lthumb {
+		outline: 3px solid var(--accent);
+		outline-offset: -3px;
 	}
 
 	/* ---------- grid ---------- */

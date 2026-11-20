@@ -3,7 +3,9 @@
 	import type { Uploader } from '#lib/uploader.svelte.ts';
 	import Icon from './Icon.svelte';
 
-	let { uploader }: { uploader: Uploader } = $props();
+	import type { Gallery } from '#lib/gallery.svelte.ts';
+
+	let { uploader, g }: { uploader: Uploader; g: Gallery } = $props();
 
 	let dialog: HTMLDialogElement;
 	let over = $state(false);
@@ -39,6 +41,15 @@
 			<Icon name="close" />
 		</button>
 	</div>
+
+	<label class="dest">
+		<span>Upload to</span>
+		<select class="field" bind:value={uploader.destination} disabled={uploader.busy}>
+			{#each g.options as opt (opt.id)}
+				<option value={opt.id}>{'\u00a0\u00a0'.repeat(opt.depth)}{opt.label}</option>
+			{/each}
+		</select>
+	</label>
 
 	<label
 		class="dropzone"
@@ -116,6 +127,21 @@
 		align-items: center;
 		justify-content: space-between;
 		margin-bottom: 12px;
+	}
+
+	.dest {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 12px;
+		font-size: 0.9rem;
+		color: var(--muted);
+	}
+
+	.dest .field {
+		flex: 1;
+		min-width: 0;
+		color: var(--text);
 	}
 
 	.dropzone {

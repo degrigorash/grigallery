@@ -24,6 +24,8 @@ export class Uploader {
 	queue = $state<QueueEntry[]>([]);
 	open = $state(false);
 	busy = $state(false);
+	/** Folder the queue uploads into; null is the root. */
+	destination = $state<string | null>(null);
 
 	pending = $derived(this.queue.some((e) => e.status === 'ready' || e.status === 'error'));
 
@@ -31,6 +33,12 @@ export class Uploader {
 
 	constructor(gallery: Gallery) {
 		this.gallery = gallery;
+	}
+
+	/** Opens the dialog aimed at the folder being looked at. */
+	show() {
+		if (!this.open) this.destination = this.gallery.folderId;
+		this.open = true;
 	}
 
 	enqueue(files: Iterable<File>, { pasted = false } = {}) {
@@ -51,7 +59,7 @@ export class Uploader {
 				pasted
 			});
 		}
-		this.open = true;
+		this.show();
 	}
 
 	remove(entry: QueueEntry) {
@@ -78,7 +86,12 @@ export class Uploader {
 			entry.message = 'Uploading…';
 			entry.progress = 0;
 			try {
-				const item = await uploadImage(entry.file, entry.name.trim(), (p) => (entry.progress = p));
+				const item = await uploadImage(
+					entry.file,
+					entry.name.trim(),
+					this.destination,
+					(p) => (entry.progress = p)
+				);
 				this.gallery.add(item);
 				added++;
 				entry.status = 'done';

@@ -6,6 +6,7 @@ import { requireAdmin } from '#lib/server/auth.ts';
 import { MAX_UPLOAD_BYTES, ORIGINALS_DIR, THUMBS_DIR } from '#lib/server/config.ts';
 import { findBySha, insertImage, listImages, toClient, type ImageRow } from '#lib/server/db.ts';
 import { processImage, UnsupportedImage } from '#lib/server/images.ts';
+import { resolveTarget } from '#lib/server/folders.ts';
 import { cleanName, nameFromFilename } from '#lib/server/names.ts';
 import type { RequestHandler } from './$types';
 
@@ -21,6 +22,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (file.size > MAX_UPLOAD_BYTES) {
 		error(413, `File is larger than ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB`);
 	}
+
+	const folder = resolveTarget(form.get('folderId'));
 
 	const buffer = Buffer.from(await file.arrayBuffer());
 	const sha256 = createHash('sha256').update(buffer).digest('hex');
@@ -59,7 +62,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		animated: info.animated ? 1 : 0,
 		color: info.color,
 		sha256,
-		uploaded_at: new Date().toISOString()
+		uploaded_at: new Date().toISOString(),
+		folder_id: folder?.id ?? null
 	};
 	try {
 		insertImage(row);

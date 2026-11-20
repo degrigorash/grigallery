@@ -10,8 +10,20 @@ export interface GalleryImage {
 	uploadedAt: string;
 	/** Dominant colour, shown while the picture loads. */
 	color: string;
+	/** Folder it lives in; null means the root. */
+	folderId: string | null;
 	url: string;
 	thumb: string;
+}
+
+export interface GalleryFolder {
+	id: string;
+	name: string;
+	/** URL segment, unique among siblings. */
+	slug: string;
+	/** null means the folder is in the root. */
+	parentId: string | null;
+	createdAt: string;
 }
 
 export const VIEWS = ['grid', 'rows', 'list'] as const;

@@ -11,12 +11,16 @@
 		g,
 		id,
 		onclose,
-		onnavigate
+		onnavigate,
+		onmove,
+		ondelete
 	}: {
 		g: Gallery;
 		id: string;
 		onclose: () => unknown;
 		onnavigate: (id: string) => unknown;
+		onmove: (id: string) => unknown;
+		ondelete: (id: string) => unknown;
 	} = $props();
 
 	let root = $state<HTMLDivElement>();
@@ -98,20 +102,8 @@
 		}
 	}
 
-	async function remove() {
-		const target = item;
-		if (!target || !confirm(`Delete “${target.name}”? This can't be undone.`)) return;
-		const neighbour = nextItem ?? prevItem;
-		try {
-			await api('DELETE', `/api/images/${target.id}`);
-		} catch (err) {
-			showToast((err as Error).message);
-			return;
-		}
-		// Move on first, so the viewer doesn't see its image vanish and close.
-		if (neighbour) await onnavigate(neighbour.id);
-		g.remove(target.id);
-		showToast('Deleted');
+	function remove() {
+		if (item) ondelete(item.id);
 	}
 
 	function onkeydown(e: KeyboardEvent) {
@@ -203,6 +195,9 @@
 				{#if g.user}
 					<button class="icon-btn" title="Rename" aria-label="Rename" onclick={startRename}>
 						<Icon name="edit" />
+					</button>
+					<button class="icon-btn" title="Move to folder" aria-label="Move to folder" onclick={() => item && onmove(item.id)}>
+						<Icon name="move" />
 					</button>
 					<button class="icon-btn" title="Delete" aria-label="Delete" onclick={remove}>
 						<Icon name="trash" />

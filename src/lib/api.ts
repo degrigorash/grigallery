@@ -35,12 +35,14 @@ export async function api<T>(method: string, url: string, body?: unknown): Promi
 export function uploadImage(
 	file: File,
 	name: string,
+	folderId: string | null,
 	onProgress: (fraction: number) => void
 ): Promise<GalleryImage> {
 	return new Promise((resolve, reject) => {
 		const form = new FormData();
 		form.append('file', file, file.name);
 		if (name) form.append('name', name);
+		if (folderId) form.append('folderId', folderId);
 
 		const xhr = new XMLHttpRequest();
 		xhr.open('POST', '/api/images');
