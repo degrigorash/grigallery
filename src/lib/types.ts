@@ -23,6 +23,8 @@ export interface GalleryFolder {
 	slug: string;
 	/** null means the folder is in the root. */
 	parentId: string | null;
+	/** Picture chosen as the cover; null means the newest picture inside. */
+	coverId: string | null;
 	createdAt: string;
 }
 

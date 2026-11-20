@@ -40,7 +40,8 @@
 		],
 		select: ['M4 4h16v16H4z', 'M8 12l3 3 5-6'],
 		check: ['M5 12.5l4.5 4.5L19 7.5'],
-		home: ['M4 11l8-7 8 7', 'M6 9.5V20h12V9.5']
+		home: ['M4 11l8-7 8 7', 'M6 9.5V20h12V9.5'],
+		cover: ['M4 5h16v14H4z', 'M4 16l4.5-4.5 4 4 3-3L20 17', 'M15.5 8a1.5 1.5 0 1 1 0 3a1.5 1.5 0 1 1 0-3z']
 	} as const;
 
 	export type IconName = keyof typeof ICONS;

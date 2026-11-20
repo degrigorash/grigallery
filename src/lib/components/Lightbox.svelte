@@ -13,7 +13,8 @@
 		onclose,
 		onnavigate,
 		onmove,
-		ondelete
+		ondelete,
+		oncover
 	}: {
 		g: Gallery;
 		id: string;
@@ -21,6 +22,7 @@
 		onnavigate: (id: string) => unknown;
 		onmove: (id: string) => unknown;
 		ondelete: (id: string) => unknown;
+		oncover: (id: string) => unknown;
 	} = $props();
 
 	let root = $state<HTMLDivElement>();
@@ -36,6 +38,11 @@
 	const item = $derived<GalleryImage | undefined>(g.visible[index]);
 	const prevItem = $derived(index > 0 ? g.visible[index - 1] : undefined);
 	const nextItem = $derived(index >= 0 ? g.visible[index + 1] : undefined);
+	// Any picture inside the open folder (subfolders too) can become its cover.
+	const canCover = $derived(
+		!!g.user && !!g.current && !!item?.folderId && !!g.subtree?.has(item.folderId)
+	);
+	const isCover = $derived(!!item && g.current?.coverId === item.id);
 
 	// Show the thumbnail at once, swap in the sharp original when it has loaded.
 	$effect(() => {
@@ -199,6 +206,18 @@
 					<button class="icon-btn" title="Move to folder" aria-label="Move to folder" onclick={() => item && onmove(item.id)}>
 						<Icon name="move" />
 					</button>
+					{#if canCover}
+						<button
+							class="icon-btn"
+							class:active={isCover}
+							title={isCover ? 'Cover of this folder (click to use the newest picture)' : 'Make folder cover'}
+							aria-label={isCover ? 'Stop using as folder cover' : 'Make folder cover'}
+							aria-pressed={isCover}
+							onclick={() => item && oncover(item.id)}
+						>
+							<Icon name="cover" />
+						</button>
+					{/if}
 					<button class="icon-btn" title="Delete" aria-label="Delete" onclick={remove}>
 						<Icon name="trash" />
 					</button>

@@ -14,7 +14,8 @@ context, so names are always shown and can be edited.
 
 - **Folders:** the gallery works like a file system. The root holds folders and loose pictures,
   folders can be nested, and each has its own address (`/anime/frieren`). Folders can be created,
-  renamed, moved and deleted; deleting one moves its contents up a level.
+  renamed, moved and deleted; deleting one moves its contents up a level. A folder's cover is
+  its newest picture, or any picture inside picked from the viewer.
 - **Sorting pictures into folders:** move one from the viewer, or select several and move or delete them together.
 - **Views:** grid, justified rows and list. The choice is remembered and rendered by the server.
 - **Viewer:** full screen, arrows, keyboard (← → Esc F), swipes on phones, tap to hide the controls.

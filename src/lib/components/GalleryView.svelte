@@ -82,11 +82,19 @@
 {#if g.view === 'grid'}
 	<div class="grid">
 		{#each g.visibleFolders as folder (folder.id)}
+			{@const cover = g.covers.get(folder.id)}
 			<a class="tile" href={g.url(folder.id)}>
-				<div class="frame folder-frame">
-					<Icon name="folder" size={48} />
-					<span class="fcount">{countLabel(folder.id)}</span>
-				</div>
+				{#if cover}
+					<div class="frame folder-cover" style:background-color={cover.color}>
+						<img src={cover.thumb} alt="" loading="lazy" decoding="async" />
+						<span class="fbadge"><Icon name="folder" size={16} />{countLabel(folder.id)}</span>
+					</div>
+				{:else}
+					<div class="frame folder-frame">
+						<Icon name="folder" size={48} />
+						<span class="fcount">{countLabel(folder.id)}</span>
+					</div>
+				{/if}
 				<span class="caption">{folder.name}</span>
 			</a>
 		{/each}
@@ -116,8 +124,15 @@
 	{#if g.visibleFolders.length}
 		<div class="fstrip">
 			{#each g.visibleFolders as folder (folder.id)}
+				{@const cover = g.covers.get(folder.id)}
 				<a class="fcard" href={g.url(folder.id)}>
-					<Icon name="folder" size={22} />
+					{#if cover}
+						<span class="fthumb-sm" style:background-color={cover.color}>
+							<img src={cover.thumb} alt="" loading="lazy" decoding="async" />
+						</span>
+					{:else}
+						<Icon name="folder" size={22} />
+					{/if}
 					<span class="fname">{folder.name}</span>
 					<span class="fmeta">{g.counts.get(folder.id) ?? 0}</span>
 				</a>
@@ -144,8 +159,16 @@
 {:else}
 	<div class="list">
 		{#each g.visibleFolders as folder (folder.id)}
+			{@const cover = g.covers.get(folder.id)}
 			<a class="lrow" href={g.url(folder.id)}>
-				<div class="lthumb fthumb"><Icon name="folder" size={28} /></div>
+				<div class="lthumb fthumb" style:background-color={cover?.color}>
+					{#if cover}
+						<img src={cover.thumb} alt="" loading="lazy" decoding="async" />
+						<span class="fcorner"><Icon name="folder" size={14} /></span>
+					{:else}
+						<Icon name="folder" size={28} />
+					{/if}
+				</div>
 				<div class="lname">{folder.name}</div>
 				<span class="lcell date">{countLabel(folder.id)}</span>
 				<span class="lcell dims"></span>
@@ -205,6 +228,57 @@
 
 	.tile:hover .folder-frame {
 		background: var(--panel-2);
+	}
+
+	/* A folder with a cover: the picture, dimmed at the bottom, with a folder badge. */
+	.folder-cover::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(transparent 55%, rgba(0, 0, 0, 0.6));
+		pointer-events: none;
+	}
+
+	.fbadge {
+		position: absolute;
+		left: 8px;
+		bottom: 8px;
+		z-index: 1;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 9px 4px 7px;
+		border-radius: 8px;
+		background: rgba(14, 14, 17, 0.75);
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
+		font-size: 0.75rem;
+		color: #fff;
+	}
+
+	.fbadge :global(.icon) {
+		color: var(--accent);
+	}
+
+	.fthumb-sm {
+		width: 30px;
+		height: 30px;
+		overflow: hidden;
+		border-radius: 6px;
+		flex: none;
+	}
+
+	.fcorner {
+		position: absolute;
+		right: 3px;
+		bottom: 3px;
+		display: grid;
+		place-items: center;
+		width: 22px;
+		height: 22px;
+		border-radius: 6px;
+		background: rgba(14, 14, 17, 0.8);
+		color: var(--accent);
 	}
 
 	.fcount {

@@ -18,6 +18,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		name,
 		slug,
 		parent_id: parent?.id ?? null,
+		cover_id: null,
 		created_at: new Date().toISOString()
 	};
 	insertFolder(row);

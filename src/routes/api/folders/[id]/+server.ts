@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { requireAdmin } from '#lib/server/auth.ts';
-import { deleteFolder, folderToClient, getFolder, updateFolder } from '#lib/server/db.ts';
+import { deleteFolder, folderToClient, getFolder, getImage, updateFolder } from '#lib/server/db.ts';
 import {
 	assertFreeSlug,
 	collisionsOnDelete,
@@ -10,7 +10,10 @@ import {
 } from '#lib/server/folders.ts';
 import type { RequestHandler } from './$types';
 
-/** Rename and/or move: { name?, parentId? } (parentId null = root). */
+/**
+ * Any of: { name, parentId, coverId }. parentId null = root;
+ * coverId null = back to the newest picture inside.
+ */
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	requireAdmin(locals);
 	const folder = getFolder(params.id);
@@ -27,8 +30,23 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	}
 	assertFreeSlug(parentId, slug, folder.id);
 
-	updateFolder(folder.id, { name, slug, parent_id: parentId });
-	return Response.json(folderToClient({ ...folder, name, slug, parent_id: parentId }));
+	let coverId = folder.cover_id;
+	if ('coverId' in body) {
+		if (body.coverId === null) {
+			coverId = null;
+		} else {
+			const image = typeof body.coverId === 'string' ? getImage(body.coverId) : undefined;
+			const imageFolder = image?.folder_id ? (getFolder(image.folder_id) ?? null) : null;
+			if (!image || !isInside(imageFolder, folder.id)) {
+				error(400, 'The cover has to be a picture from this folder');
+			}
+			coverId = image.id;
+		}
+	}
+
+	const fields = { name, slug, parent_id: parentId, cover_id: coverId };
+	updateFolder(folder.id, fields);
+	return Response.json(folderToClient({ ...folder, ...fields }));
 };
 
 /** Deletes the folder; what was inside moves up to its parent. */

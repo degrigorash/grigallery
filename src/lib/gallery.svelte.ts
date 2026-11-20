@@ -103,6 +103,28 @@ export class Gallery {
 		return counts;
 	});
 
+	/**
+	 * Cover picture of each folder: the one chosen for it if it is still
+	 * somewhere inside, otherwise the newest picture in it or its subfolders.
+	 */
+	covers = $derived.by(() => {
+		const covers = new Map<string, GalleryImage>();
+		for (const it of this.items) {
+			let id = it.folderId;
+			while (id) {
+				const best = covers.get(id);
+				if (!best || it.uploadedAt > best.uploadedAt) covers.set(id, it);
+				id = this.byId.get(id)?.parentId ?? null;
+			}
+		}
+		const images = new Map(this.items.map((it) => [it.id, it]));
+		for (const f of this.folders) {
+			const chosen = f.coverId ? images.get(f.coverId) : undefined;
+			if (chosen?.folderId && this.descendants(f.id).has(chosen.folderId)) covers.set(f.id, chosen);
+		}
+		return covers;
+	});
+
 	/** Every folder as a flat, indented list for pickers, root first. */
 	options = $derived.by(() => {
 		const out: FolderOption[] = [{ id: null, label: 'Gallery', depth: 0 }];

@@ -24,6 +24,7 @@ export interface FolderRow {
 	name: string;
 	slug: string;
 	parent_id: string | null;
+	cover_id: string | null;
 	created_at: string;
 }
 
@@ -77,6 +78,10 @@ function migrate(conn: DatabaseSync) {
 	// Folders arrived after the first release: existing pictures stay in the root.
 	if (!columns.includes('folder_id')) conn.exec('ALTER TABLE images ADD COLUMN folder_id TEXT');
 	conn.exec('CREATE INDEX IF NOT EXISTS images_folder ON images (folder_id)');
+	const folderColumns = (conn.prepare('PRAGMA table_info(folders)').all() as { name: string }[]).map(
+		(c) => c.name
+	);
+	if (!folderColumns.includes('cover_id')) conn.exec('ALTER TABLE folders ADD COLUMN cover_id TEXT');
 }
 
 /** Runs fn in a transaction, rolling back if it throws. */
@@ -162,6 +167,7 @@ export function folderToClient(row: FolderRow): GalleryFolder {
 		name: row.name,
 		slug: row.slug,
 		parentId: row.parent_id ?? null,
+		coverId: row.cover_id ?? null,
 		createdAt: row.created_at
 	};
 }
@@ -190,15 +196,20 @@ export function childFolders(parentId: string | null): FolderRow[] {
 export function insertFolder(row: FolderRow) {
 	getDb()
 		.prepare(
-			`INSERT INTO folders (id, name, slug, parent_id, created_at)
-			VALUES (:id, :name, :slug, :parent_id, :created_at)`
+			`INSERT INTO folders (id, name, slug, parent_id, cover_id, created_at)
+			VALUES (:id, :name, :slug, :parent_id, :cover_id, :created_at)`
 		)
 		.run({ ...row });
 }
 
-export function updateFolder(id: string, fields: Pick<FolderRow, 'name' | 'slug' | 'parent_id'>) {
+export function updateFolder(
+	id: string,
+	fields: Pick<FolderRow, 'name' | 'slug' | 'parent_id' | 'cover_id'>
+) {
 	getDb()
-		.prepare('UPDATE folders SET name = :name, slug = :slug, parent_id = :parent_id WHERE id = :id')
+		.prepare(
+			'UPDATE folders SET name = :name, slug = :slug, parent_id = :parent_id, cover_id = :cover_id WHERE id = :id'
+		)
 		.run({ ...fields, id });
 }
 

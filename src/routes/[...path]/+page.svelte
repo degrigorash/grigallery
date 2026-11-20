@@ -138,6 +138,20 @@
 
 	// ---------- folders ----------
 
+	/** Makes a picture the open folder's cover, or goes back to automatic if it already is. */
+	async function toggleCover(imageId: string) {
+		const folder = g.current;
+		if (!folder) return;
+		const coverId = folder.coverId === imageId ? null : imageId;
+		try {
+			const updated = await api<GalleryFolder>('PATCH', `/api/folders/${folder.id}`, { coverId });
+			g.upsertFolder(updated);
+			showToast(coverId ? `Cover of “${folder.name}”` : 'Cover is the newest picture again');
+		} catch (err) {
+			showToast((err as Error).message);
+		}
+	}
+
 	function newFolder() {
 		prompt = {
 			title: 'New folder',
@@ -236,6 +250,17 @@
 		if (g.user && hasFiles(e)) e.preventDefault();
 	}
 
+	// Reset on every drop, wherever it lands: the upload dialog's drop zone
+	// stops the event from reaching ondrop below, which used to leave the
+	// overlay stuck after the dialog closed.
+	function endDrag() {
+		dragging = 0;
+	}
+
+	$effect(() => {
+		if (uploader.open) untrack(endDrag);
+	});
+
 	function ondrop(e: DragEvent) {
 		if (!g.user || !hasFiles(e)) return;
 		e.preventDefault();
@@ -262,7 +287,16 @@
 	const allPicked = $derived(g.visible.length > 0 && g.visible.every((it) => g.selected.has(it.id)));
 </script>
 
-<svelte:window {ondragenter} {ondragleave} {ondragover} {ondrop} {onpaste} {onkeydown} />
+<svelte:window
+	{ondragenter}
+	{ondragleave}
+	{ondragover}
+	{ondrop}
+	ondropcapture={endDrag}
+	ondragend={endDrag}
+	{onpaste}
+	{onkeydown}
+/>
 
 <svelte:head>
 	{#if g.current}<title>{g.current.name} · grigallery</title>{/if}
@@ -327,6 +361,7 @@
 		onnavigate={showImage}
 		onmove={(id) => moveImages([id])}
 		ondelete={(id) => deleteImages([id])}
+		oncover={toggleCover}
 	/>
 {/if}
 
