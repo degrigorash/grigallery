@@ -36,37 +36,3 @@ data/
 ```
 
 Copying this folder is a complete backup.
-
-## Running with Docker
-
-```bash
-cp .env.example .env          # set ORIGIN to the site's address
-npm run hash-password         # or: node scripts/hash-password.mjs
-                              # paste the output into ADMIN_PASSWORD_HASH
-node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"   # SECRET_KEY
-mkdir -p data
-docker compose up -d --build
-```
-
-The container listens on port 3000. Caddy:
-
-```
-gallery.example.com {
-	request_body {
-		max_size 60MB
-	}
-	reverse_proxy grigallery:3000
-}
-```
-
-`ORIGIN` in `.env` must match the address people open, or uploads and login are rejected
-by SvelteKit's CSRF protection.
-
-## Development
-
-```bash
-npm install
-cp .env.example .env    # ORIGIN=http://localhost:5173, plus a password hash
-npm run dev
-npm run check           # types
-```
